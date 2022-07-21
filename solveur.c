@@ -20,6 +20,10 @@ void sudoku_free(sudoku_p s){
   free(s);
 }
 
+void sudoku_reset(sudoku_p s){
+  memset(s, 0, sizeof(sudoku_t));
+}
+
 void sudoku_print(sudoku_p s){
   grid_print(s);
   queue_print(s);
@@ -29,7 +33,7 @@ void grid_print(sudoku_p s){
   int i, j;
   for(i=0; i<9; i++){
     for(j=0; j<9; j++)
-      printf("%c ",  GRID(s,i,j) != 0 ? (char) GRID(s,i,j) : ' ');
+      printf("%u ",  GRID(s,i,j));
     
     printf("\n");
   }
@@ -38,12 +42,13 @@ void grid_print(sudoku_p s){
 void queue_print(sudoku_p s){
   char i, j;
   for(i=s->start; i<s->end; i++){
-    printf("%c-[", (char) s->queue[i]);
+    printf("%u-[", s->queue[i]);
     for(j=1; j<10; j++)
-      if(IS_POS(s,i,j))
-        printf("%c", j);
+      if(IS_POS(s, s->queue[i], j))
+        printf("%u", j);
     printf("] ");
   }
+  printf("\n");
 }
 
 /* TODO 
@@ -57,7 +62,7 @@ int sudoku_init(sudoku_p s, const char* str){
   /*if (valid_string(str)) return EXIT_FAILURE;*/
   int i;
   for(i=0; i<81; i++)
-    s->grid[i] = (uchar) str[i];
+    s->grid[i] = str[i] - 48;
 
   if(queue_init(s)) return EXIT_FAILURE;
 
@@ -65,7 +70,7 @@ int sudoku_init(sudoku_p s, const char* str){
 }
 
 int queue_init(sudoku_p s){
-  uchar nb, flag;
+  uchar nb, flag, temp;
   uchar i, j, k, x;
   uchar q, r, qi, qj;
   s->start = 0;
@@ -78,11 +83,12 @@ int queue_init(sudoku_p s){
         qj = j/3;
         for(k=1; k<10; k++){
           flag = 1;
-          for(x=0; x<9 && flag; x++){
+          for(x=0; (x<9) && flag; x++){
             q = x/3; r = x%3;
             /*column OR row OR square*/
-            if ((GRID(s,x,j)==k) || (GRID(s,i,x)==k)
-                || (GRID(s,(3*qi+q),3*qj+r)==k)){
+            if ((GRID(s,x,j) == k) || 
+                (GRID(s,i,x) == k) || 
+                (GRID(s,(3*qi+q), (3*qj+r)) == k)){
               flag = 0;
             }
           }
@@ -96,17 +102,18 @@ int queue_init(sudoku_p s){
         s->possible[9*i+j] += nb;
 
         /*inserting in the queue*/
-        flag = 0;
+        flag = 9*i+j;
         for(k=s->start; k<s->end; k++){
           x = NB_POS(s, s->queue[k]);
           if (nb<x){
-            flag = s->queue[k];
-            s->queue[k] = 9*i+j;
+            temp = s->queue[k];
+            s->queue[k] = flag;
+            flag = temp;
             nb = x;
           }
         }
 
-        s->queue[flag] = flag;
+        s->queue[s->end] = flag;
         s->end ++;
       }
     }
@@ -116,6 +123,7 @@ int queue_init(sudoku_p s){
 }
 
 int sudoku_solve(sudoku_p s){
+  /*printf("%u, %u\n", QUEUE_FIRST(s), NB_BRANCH(s));*/
   uchar nb, flag;
   uchar i;
   sudoku_p c;
@@ -129,27 +137,28 @@ int sudoku_solve(sudoku_p s){
 
   if(nb==1){
     for(i=1; i<10; i++)
-      if(IS_POS(s, QUEUE_FIRST(s)), i){
+      if(IS_POS(s, QUEUE_FIRST(s), i)){
+        /*printf("(1)%u<-%u, ", QUEUE_FIRST(s), i);*/
         sudoku_update(s, i);
-        return solve(s);
+        return sudoku_solve(s);
       }
   }
 
   c = sudoku_copy(s);
   for(i=1; i<10; i++){
-    if(IS_POS(s, QUEUE_FIRST(s)), i){
+    if(IS_POS(s, QUEUE_FIRST(s), i)){
+      /*printf("(%u)%u<-%u, ", nb, QUEUE_FIRST(s), i);*/
       sudoku_update(s,i);
-      flag = solve(s);
-      if(flag){
+      flag = sudoku_solve(s);
+      if(flag)
         memcpy(s,c,sizeof(sudoku_t));
-        sudoku_free(c);
-      }
       else{
         sudoku_free(c);
         return EXIT_SUCCESS;
       }
     }
   }
+  sudoku_free(c);
 
   return EXIT_FAILURE;
 }
@@ -187,7 +196,7 @@ int sudoku_update(sudoku_p s, uchar x){
 
     /*square*/
     q = k/3; r = k%3;
-    p2 = 9*(3*qx+q)+3*qy+r;
+    p2 = 9*(3*qi+q)+3*qj+r;
     if(IS_POS(s, p2, x) && (p2 != pos)){
       s->possible[p2] -= (1<<(x+6)) + 1;
 

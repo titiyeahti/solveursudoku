@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <integer.h>
 #include <string.h>
 #include <time.h>
 
@@ -15,8 +14,8 @@
 #define GRID(s,i,j) (s->grid[9*(i)+(j)])
 #define DONE(s) ((s)->start == (s)->end)
 
-typedef UCHAR uchar;
-typedef USHORT ushort;
+typedef unsigned char uchar;
+typedef unsigned short ushort;
 
 /* grid, an array of 81 cell containing the current state of the sudoku
  * queue, the tiles to fill ordered by increasing entropy
@@ -32,7 +31,7 @@ typedef struct sudoku {
   uchar grid[81];
   uchar queue[81];
   ushort possible[81];
-  char start, end;
+  uchar start, end;
 } sudoku_t;
 
 typedef sudoku_t* sudoku_p;
@@ -42,6 +41,8 @@ sudoku_p sudoku_new();
 sudoku_p sudoku_copy(sudoku_p s);
 
 void sudoku_free(sudoku_p s);
+
+void sudoku_reset(sudoku_p s);
 
 void sudoku_print(sudoku_p s);
 
