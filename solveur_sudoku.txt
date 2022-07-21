@@ -1,0 +1,72 @@
+struct sudoku
+uchar* grid-> grille 9x9
+uchar* possible -> possible 9x9x2 (16b = 9+7)
+	9 bits de poids fort = bit field
+	4 bits de poids faible = nombre de possiblilités
+	3 bits du milieu ?
+uchar* queue -> queue de longueur 81, id des cases (0->80) triés dans l'ordre croissant du nombre de possiblités.
+uchar start
+uchar end;
+
+
+solveur
+while sudoku->start - sudoku->end > 0
+	copy state 
+	for i=1; i<10; i++
+		if possible[sudoku->queue[sudoku->start]] & 1<<(i+6)
+		update(sudoku->start, i,  
+
+update(uchar pos, uchar val, sudoku_p s)
+	s->grid[pos] = val
+	s->start ++
+	s->possible[pos] --
+	s->possible[pos] &= (511<<7)^(1<<(6+val)) (ET bàb de la négation bàb de du bon bit allumé)
+				->inlining de ces 2 lignes
+
+Update queue : décrémentation du nombre de possibilité 1 à 1 donc swap avec le premier qui a autant avant swap 
+ e.g. en dessous
+
+111122233
+368901457
+     ^
+
+111112233
+368910457
+    ^
+swap pos with first cel with same previous val
+	
+0 1 2 3 4 5 6 7 8 
+0 1 2 3 4 5 6 7 8 
+0 1 2 3 4 5 6 7 8 
+0 1 2 3 4 5 6 7 8 
+0 1 2 3 4 5 6 7 8 
+0 1 2 3 4 5 6 7 8 
+0 1 2 3 4 5 6 7 8 
+0 1 2 3 4 5 6 7 8 
+0 1 2 3 4 5 6 7 8 
+
+0123
+0123
+0123
+0123
+
+carré contenant 9i+j
+
+0<=i<3 => I=0
+3<=i<6
+
+
+6,4
+2,1
+
+update_square(pos, val, s)
+i = pos/9;
+j = pos%9;
+x=i/3
+y=j/3
+for a=3*x; a<3*x+3; a++
+	for b=3*y; b<3*y+3; b++
+		if s->possible[9*a+b] & (1<<(6+val))
+			update(9*a+b, val, s);
+
+idem for row and column
