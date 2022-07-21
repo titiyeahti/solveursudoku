@@ -7,6 +7,16 @@
 #include <string.h>
 #include <time.h>
 
+#define NB_POS(s,i) (s->possible[(i)] & 15)
+#define QUEUE_FIRST(s) ((s)->queue[(s)->start])
+#define NB_BRANCH(s) NB_POS(s,(s)->queue[(s)->start])
+#define Q_ENTROPY(s,i) NB_POS(s,(s)->queue[(i)])
+#define IS_POS(s,i,k) (s->possible[(i)] & (1<<((k)+6)))
+#define GRID(s,i,j) (s->grid[9*(i)+(j)])
+#define DONE(s) ((s)->start == (s)->end)
+
+typedef UCHAR uchar;
+typedef USHORT ushort;
 
 /* grid, an array of 81 cell containing the current state of the sudoku
  * queue, the tiles to fill ordered by increasing entropy
@@ -44,7 +54,11 @@ int sudoku_init(sudoku_p s, const char* str);
 
 int queue_init(sudoku_p s);
 
-int sudoku_solve(sudoku_p sin, sudoku_p sout);
+int sudoku_solve(sudoku_p s);
+
+int sudoku_update(sudoku_p s, uchar x);
+
+int queue_update(sudoku_p s, uchar x);
 
 char* sudoku_generate();
 
