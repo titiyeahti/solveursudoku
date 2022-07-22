@@ -13,6 +13,8 @@
 #define IS_POS(s,i,k) (s->possible[(i)] & (1<<((k)+6)))
 #define GRID(s,i,j) (s->grid[9*(i)+(j)])
 #define DONE(s) ((s)->start == (s)->end)
+#define SIZE 81
+#define SIZE2 162
 
 typedef unsigned char uchar;
 typedef unsigned short ushort;
@@ -43,6 +45,10 @@ sudoku_p sudoku_copy(sudoku_p s);
 void sudoku_free(sudoku_p s);
 
 void sudoku_reset(sudoku_p s);
+
+void string_write(sudoku_p s, char* buff);
+
+void string_print(sudoku_p s);
 
 void sudoku_print(sudoku_p s);
 

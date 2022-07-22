@@ -1,6 +1,4 @@
 #include "solveur.h"
-#define SIZE 81
-#define SIZE2 162
 
 sudoku_p sudoku_new(){
   sudoku_p s = malloc(sizeof(sudoku_t));
@@ -22,6 +20,20 @@ void sudoku_free(sudoku_p s){
 
 void sudoku_reset(sudoku_p s){
   memset(s, 0, sizeof(sudoku_t));
+}
+
+void string_write(sudoku_p s, char* buff){
+  int i;
+  for(i=0; i<81; i++) buff[i] = s->grid[i] + 48;
+  buff[81] = '\0';
+}
+
+void string_print(sudoku_p s){
+  char str[82];
+  int i;
+  for(i=0; i<81; i++) str[i] = s->grid[i] + 48;
+  str[81] = '\0';
+  printf("%s\n", str);
 }
 
 void sudoku_print(sudoku_p s){
@@ -70,7 +82,7 @@ int sudoku_init(sudoku_p s, const char* str){
 }
 
 int queue_init(sudoku_p s){
-  uchar nb, flag, temp;
+  uchar nb, flag;
   uchar i, j, k, x;
   uchar q, r, qi, qj;
   s->start = 0;
@@ -102,18 +114,18 @@ int queue_init(sudoku_p s){
         s->possible[9*i+j] += nb;
 
         /*inserting in the queue*/
-        flag = 9*i+j;
+        q = 9*i+j;
         for(k=s->start; k<s->end; k++){
           x = NB_POS(s, s->queue[k]);
           if (nb<x){
-            temp = s->queue[k];
-            s->queue[k] = flag;
-            flag = temp;
+            r = s->queue[k];
+            s->queue[k] = q;
+            q = r;
             nb = x;
           }
         }
 
-        s->queue[s->end] = flag;
+        s->queue[s->end] = q;
         s->end ++;
       }
     }
@@ -123,7 +135,6 @@ int queue_init(sudoku_p s){
 }
 
 int sudoku_solve(sudoku_p s){
-  /*printf("%u, %u\n", QUEUE_FIRST(s), NB_BRANCH(s));*/
   uchar nb, flag;
   uchar i;
   sudoku_p c;
@@ -138,7 +149,6 @@ int sudoku_solve(sudoku_p s){
   if(nb==1){
     for(i=1; i<10; i++)
       if(IS_POS(s, QUEUE_FIRST(s), i)){
-        /*printf("(1)%u<-%u, ", QUEUE_FIRST(s), i);*/
         sudoku_update(s, i);
         return sudoku_solve(s);
       }
@@ -147,7 +157,6 @@ int sudoku_solve(sudoku_p s){
   c = sudoku_copy(s);
   for(i=1; i<10; i++){
     if(IS_POS(s, QUEUE_FIRST(s), i)){
-      /*printf("(%u)%u<-%u, ", nb, QUEUE_FIRST(s), i);*/
       sudoku_update(s,i);
       flag = sudoku_solve(s);
       if(flag)
@@ -177,6 +186,7 @@ int sudoku_update(sudoku_p s, uchar x){
   uchar pos, p2;
   uchar k, i, j, q, r, qi, qj;
   pos = QUEUE_FIRST(s);
+  QUEUE_FIRST(s) = 0;
 
   i = pos/9; j = pos%9;
   qi = i/3; qj = j/3;
@@ -184,6 +194,7 @@ int sudoku_update(sudoku_p s, uchar x){
   /* update GRID and Start*/
   s->grid[pos] = x;
   s->start ++;
+  s->possible[pos] = 0;
 
   for(k=0; k<9; k++){
     /*column*/
