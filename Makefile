@@ -1,4 +1,4 @@
-CFLAGS=-O3 -ANSI -Wall -Wextra
+CFLAGS=-O3 -Wall -Wextra 
 
 all: main
 
@@ -8,4 +8,4 @@ main: solveur.o
 
 .PHONY: clean
 clean:
-  rm *.o main
+	rm *.o main

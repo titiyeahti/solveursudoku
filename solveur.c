@@ -40,7 +40,7 @@ void grid_print(sudoku_p s){
 }
 
 void queue_print(sudoku_p s){
-  char i, j;
+  uchar i, j;
   for(i=s->start; i<s->end; i++){
     printf("%u-[", s->queue[i]);
     for(j=1; j<10; j++)
@@ -163,6 +163,16 @@ int sudoku_solve(sudoku_p s){
   return EXIT_FAILURE;
 }
 
+inline void update_core(sudoku_p s, uchar x, uchar pos, uchar p2){
+  if(IS_POS(s, p2, x) && (p2 != pos)){
+    /* POSSIBLE
+     * shut down corresp bit + decreasing the counter*/
+    s->possible[p2] -= (1<<(x+6)) + 1;
+
+    queue_update(s, p2);
+  }
+}
+
 int sudoku_update(sudoku_p s, uchar x){
   uchar pos, p2;
   uchar k, i, j, q, r, qi, qj;
@@ -178,37 +188,25 @@ int sudoku_update(sudoku_p s, uchar x){
   for(k=0; k<9; k++){
     /*column*/
     p2 = 9*k+j;
-    if(IS_POS(s, p2, x) && (p2 != pos)){
-      /* POSSIBLE
-       * shut down corresp bit + decreasing the counter*/
-      s->possible[p2] -= (1<<(x+6)) + 1;
-
-      queue_update(s, p2);
-    }
+    update_core(s, x, pos, p2);
 
     /*row*/
     p2 = 9*i+k;
-    if(IS_POS(s, p2, x) && (p2 != pos)){
-      s->possible[p2] -= (1<<(x+6)) + 1;
-
-      queue_update(s, p2);
-    }
+    update_core(s, x, pos, p2);
 
     /*square*/
     q = k/3; r = k%3;
     p2 = 9*(3*qi+q)+3*qj+r;
-    if(IS_POS(s, p2, x) && (p2 != pos)){
-      s->possible[p2] -= (1<<(x+6)) + 1;
-
-      queue_update(s, p2);
-    }
+    update_core(s, x, pos, p2);
   }
+
+  return EXIT_SUCCESS;
 }
 
 /* Use to upate the spot in the queue of the tile x when 
    its entropy have been decreased by one*/
 int queue_update(sudoku_p s, uchar x){
-  uchar xspot, spot, q;
+  uchar spot, q;
   spot = s->start;
   for(q=s->start; q<s->end-1; q++){
     if(s->queue[q] == x){
